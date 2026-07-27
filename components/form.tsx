@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSettings } from "@/providers/sanityProvider";
-import { login, signup } from "@/app/work/actions";
+// import { login, signup } from "@/app/work/actions";
 
 export default function LoginFrom() {
   const [user, setUser] = useState("");
@@ -58,7 +58,7 @@ export default function LoginFrom() {
         <button
           type="submit"
           className="font-sm border hairline p-4 transition-all font-bold outline-none border-l-none bg-accent cursor-pointer"
-          formAction={login}
+          // formAction={login}
         >
           Enter
         </button>

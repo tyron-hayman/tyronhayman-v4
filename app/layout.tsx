@@ -7,6 +7,7 @@ import { client } from "@/sanity/lib/client";
 import { cn } from "@/lib/utils";
 import { GLOBAL_AND_HOMEPAGE_QUERY } from "@/sanity/queries/queries";
 import { SettingsProvider } from "@/providers/sanityProvider";
+import { Analytics } from "@vercel/analytics/next";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -62,6 +63,7 @@ export default async function RootLayout({
         <Grain />
         <CustomCursor />
         <SettingsProvider data={data}>{children}</SettingsProvider>
+        <Analytics />
       </body>
     </html>
   );

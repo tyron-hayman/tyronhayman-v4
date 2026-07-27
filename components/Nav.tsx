@@ -26,7 +26,7 @@ export default function Nav() {
         <a
           href="#top"
           data-cursor-hover
-          className="font-display text-sm md:text-base tracking-tight text-ink"
+          className="font-display text-sm md:text-base tracking-tight text-ink font-black uppercase"
         >
           {settingsData?.siteTitle}
         </a>

@@ -4,7 +4,6 @@ import LoginFrom from "@/components/form";
 import Contact from "@/components/Contact";
 
 export default function Home() {
-  // const data = useHomepage();
   return (
     <>
       <Nav />

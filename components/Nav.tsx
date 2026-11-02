@@ -4,6 +4,10 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { profile } from "@/lib/data";
 import { useSettings } from "@/providers/sanityProvider";
+import { createClient } from "@/lib/utils/supabase/client";
+import { useRouter } from "next/navigation";
+import { LogOut } from "lucide-react";
+import { useUser } from "@/hooks/useUser";
 
 const links = [
   { label: "Work", href: "work" },
@@ -15,6 +19,21 @@ export default function Nav() {
   const [open, setOpen] = useState(false);
   const settingsData = useSettings();
   const [baseUrl, setBaseUrl] = useState("");
+  const router = useRouter();
+  const supabase = createClient();
+  const { user, loading } = useUser();
+
+  async function handleLogout() {
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      console.error("Logout failed:", error.message);
+      return;
+    }
+
+    router.push("/");
+    router.refresh();
+  }
 
   useEffect(() => {
     setBaseUrl(window.location.origin);
@@ -42,6 +61,11 @@ export default function Nav() {
               {l.label}
             </a>
           ))}
+          {user && !loading && (
+            <a onClick={handleLogout}>
+              <LogOut className="size-4" color="#ffffff" />
+            </a>
+          )}
         </nav>
 
         <div className="hidden md:flex items-center gap-2" data-cursor-hover>

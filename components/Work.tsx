@@ -2,13 +2,14 @@
 
 import { motion } from "framer-motion";
 import { projects } from "@/lib/data";
-import { type WorkItems } from "@/providers/sanityProvider";
+import { useWorkpage, type WorkItems } from "@/providers/sanityProvider";
 import Link from "next/link";
 import { useHomepage } from "@/providers/sanityProvider";
 import PortableTextEditor from "./global/portable-text-editor";
 
 export default function Work() {
   const data = useHomepage();
+  const workData = useWorkpage();
   return (
     <section id="work" className="px-6 md:px-10 py-28 md:py-36">
       <div className="max-w-[1400px] mx-auto">
@@ -43,14 +44,18 @@ export default function Work() {
             >
               <Link
                 className="font-sm border hairline p-4 hover:bg-accent transition-all font-bold"
-                href=""
+                href="/work"
               >
-                View Full Work
+                View More Recent Work
               </Link>
             </motion.div> */}
           </div>
-          <span className="eyebrow hidden md:block">
-            {String(projects.length - 1).padStart(2, "0")} projects
+          <span className="eyebrow hidden md:block uppercase text-right">
+            {String(projects.length - 1).padStart(2, "0")}
+            {""}
+            {workData?.workItems &&
+              `/${String(workData.workItems.length - 1).padStart(2, "0")}`}{" "}
+            projects
           </span>
         </div>
         {data && data.workItems && (
@@ -73,10 +78,13 @@ export default function Work() {
               >
                 <span className="eyebrow md:col-span-1">0{i + 1}</span>
 
-                <div className="md:col-span-6 flex items-center gap-4">
+                <div className="md:col-span-6">
                   <h3 className="font-display text-3xl md:text-5xl tracking-tight transition-colors group-hover:text-accent">
                     {p.title}
                   </h3>
+                  <h4 className="font-display text-lg tracking-tight font-[700] uppercase text-white/50">
+                    Client - {p.client}
+                  </h4>
                 </div>
                 {p.tech && p.tech.length > 0 && (
                   <div className="md:col-span-3 flex flex-wrap gap-x-2 gap-y-1 text-ink-dim text-sm font-body">

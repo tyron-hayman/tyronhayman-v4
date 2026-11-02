@@ -37,6 +37,17 @@ export default defineType({
               type: "string",
             }),
             defineField({
+              name: "client",
+              title: "Client",
+              type: "string",
+            }),
+            defineField({
+              name: "image",
+              title: "Image",
+              type: "image",
+              options: { hotspot: true },
+            }),
+            defineField({
               name: "content",
               title: "Content",
               type: "text",

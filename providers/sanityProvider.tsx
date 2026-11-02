@@ -3,6 +3,44 @@
 import { createContext, useContext, ReactNode } from "react";
 import { type PortableTextBlock } from "sanity";
 
+interface SanityImageDimensions {
+  aspectRatio: number;
+  height: number;
+  width: number;
+}
+
+interface SanityImageMetadata {
+  dimensions: SanityImageDimensions;
+  lqip: string;
+}
+
+interface SanityImageAsset {
+  _id: string;
+  url: string;
+  metadata: SanityImageMetadata;
+}
+
+interface SanityImageHotspot {
+  x: number;
+  y: number;
+  height: number;
+  width: number;
+}
+
+interface SanityImageCrop {
+  top: number;
+  bottom: number;
+  left: number;
+  right: number;
+}
+
+interface WorkItemImage {
+  asset: SanityImageAsset;
+  hotspot: SanityImageHotspot | null;
+  crop: SanityImageCrop | null;
+  alt: string | null;
+}
+
 export type Settings = {
   siteTitle?: string;
   siteSubTitle?: string;
@@ -18,7 +56,18 @@ export type Settings = {
 
 export type WorkItems = {
   title?: string;
+  client?: string;
   content?: string;
+  year?: number;
+  url?: string;
+  tech?: { title: string }[];
+};
+
+export type WorkPageItems = {
+  title?: string;
+  content?: string;
+  client?: string;
+  image?: WorkItemImage;
   year?: number;
   url?: string;
   tech?: { title: string }[];
@@ -40,9 +89,16 @@ export type HomePage = {
   footerLinkText?: string;
 };
 
+export type WorkPage = {
+  heading?: string;
+  content?: PortableTextBlock;
+  workItems?: WorkPageItems[];
+};
+
 type SanityData = {
   settings: Settings | null;
   homepage: HomePage | null;
+  workpage: WorkPage | null;
 };
 
 const SanityDataContext = createContext<SanityData | null>(null);
@@ -78,4 +134,8 @@ export function useSettings() {
 
 export function useHomepage() {
   return useSanityData().homepage;
+}
+
+export function useWorkpage() {
+  return useSanityData().workpage;
 }

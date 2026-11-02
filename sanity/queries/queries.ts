@@ -12,6 +12,7 @@ export const GLOBAL_AND_HOMEPAGE_QUERY = groq`{
     workContent,
     "workItems": workItems[]{
       title,
+      client,
       content,
       year,
       url,
@@ -44,5 +45,32 @@ export const GLOBAL_AND_HOMEPAGE_QUERY = groq`{
     contactTextEyebrow,
     copyrightText,
     footerText
+  },
+  "workpage": *[_type == "workPage"][0]{
+  heading,
+  content[],
+  workItems[]{
+    title,
+    client,
+    image{
+      asset->{
+        _id,
+        url,
+        metadata {
+          dimensions,
+          lqip
+        }
+      },
+      hotspot,
+      crop,
+      alt
+    },
+    content,
+    year,
+    url,
+    tech[]{
+      title
+    }
   }
+}
 }`;

@@ -78,6 +78,11 @@ export default defineType({
               type: "string",
             }),
             defineField({
+              name: "client",
+              title: "client",
+              type: "string",
+            }),
+            defineField({
               name: "content",
               title: "Content",
               type: "text",

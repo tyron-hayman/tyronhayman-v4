@@ -110,7 +110,7 @@ export default function Work() {
                   </span>
                 </div>
 
-                <p className="md:col-span-12 md:col-start-2 md:-mt-2 max-w-xl text-ink-dim text-sm md:text-base font-body">
+                <p className="md:col-span-12 md:col-start-2 md:-mt-2 max-w-xl text-white text-sm md:text-base font-body">
                   {p.content}
                 </p>
               </motion.a>

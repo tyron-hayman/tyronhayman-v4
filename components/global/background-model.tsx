@@ -64,7 +64,7 @@ type Props = {
 export default function HeadStatueBackground({
   modelUrl = "/models/head.glb",
   dracoPath = "https://www.gstatic.com/draco/versioned/decoders/1.5.7/",
-  intensity = 0.3,
+  intensity = 5,
   rotationRange = Math.PI * 1.2,
   startAngle = -0.5,
   modelHeight = 4,
@@ -119,9 +119,9 @@ export default function HeadStatueBackground({
 
     /* statue: pivot (scroll rotation) > fit (scale + facing) > model */
     const marble = new THREE.MeshStandardMaterial({
-      color: 0xffffff,
-      roughness: 0.88,
-      metalness: 0.0,
+      color: 0x000000,
+      roughness: 0.85,
+      metalness: 0,
     });
 
     const statue = new THREE.Group(); // receives scroll rotation + offsets
@@ -180,14 +180,14 @@ export default function HeadStatueBackground({
     );
 
     /* lights: deliberately dim so the statue is only just perceptible */
-    const AMBIENT_I = 0.4;
+    const AMBIENT_I = 0.2;
     const KEY_I = 1; // primary: white, from the left
-    const HIGHLIGHT_I = 0.7; // highlight: very subtle, from the right
-    const ambient = new THREE.AmbientLight(0x14151a, AMBIENT_I * intensity);
-    const key = new THREE.DirectionalLight(0xbe123c, KEY_I * intensity);
-    key.position.set(-4, 1.5, 0);
-    const rim = new THREE.DirectionalLight(0x4f46e5, HIGHLIGHT_I * intensity);
-    rim.position.set(4, 0.8, 1.5);
+    const HIGHLIGHT_I = 1; // highlight: very subtle, from the right
+    const ambient = new THREE.AmbientLight(0xffffff, AMBIENT_I * intensity);
+    const key = new THREE.DirectionalLight(0xffffff, KEY_I * intensity);
+    key.position.set(-4, 1.5, -4);
+    const rim = new THREE.DirectionalLight(0xbe123c, HIGHLIGHT_I * intensity);
+    rim.position.set(4, 0.8, 0);
     scene.add(ambient, key, rim);
 
     /* sizing */

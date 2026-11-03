@@ -129,7 +129,7 @@ export default function HeadStatueBackground({
   offsetY = -0.55,
   cameraDistance = 4.4,
   modelYaw = Math.PI / 2,
-  glitch = 0.6,
+  glitch = 0.2,
   className = "",
 }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);

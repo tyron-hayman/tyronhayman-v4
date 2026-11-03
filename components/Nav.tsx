@@ -76,7 +76,7 @@ export default function Nav() {
           <span className="eyebrow">{settingsData?.availabilityText}</span>
         </div>
 
-        <button
+        {/* <button
           onClick={() => setOpen((v) => !v)}
           data-cursor-hover
           aria-label="Toggle menu"
@@ -88,7 +88,7 @@ export default function Nav() {
           <span
             className={`h-px w-full bg-ink transition-transform ${open ? "-translate-y-[3.5px] -rotate-45" : ""}`}
           />
-        </button>
+        </button> */}
       </div>
 
       <AnimatePresence>

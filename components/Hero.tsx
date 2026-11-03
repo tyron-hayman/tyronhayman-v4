@@ -44,7 +44,6 @@ export default function Hero({ data }: { data: HomePage | null }) {
       id="top"
       className="relative min-h-[100svh] flex flex-col justify-end px-6 md:px-10 pb-14 pt-32 md:pt-40 overflow-hidden"
     >
-      <HeadStatueBackground />
       <div className="absolute inset-0 -z-10 opacity-[0.4]">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[70vw] h-[70vw] max-w-[900px] max-h-[900px] rounded-full bg-accent/10 blur-[120px]" />
       </div>

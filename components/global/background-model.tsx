@@ -28,6 +28,61 @@ import {
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
+import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
+
+/** Digital glitch: RGB split + horizontal slice displacement + scanlines. */
+const GlitchShader = {
+  uniforms: {
+    tDiffuse: { value: null as THREE.Texture | null },
+    uTime: { value: 0 },
+    uAmount: { value: 0 }, // 0 = idle (faint RGB split only), 1 = full glitch
+  },
+  vertexShader: /* glsl */ `
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: /* glsl */ `
+    uniform sampler2D tDiffuse;
+    uniform float uTime;
+    uniform float uAmount;
+    varying vec2 vUv;
+
+    float hash(vec2 p) {
+      return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+    }
+
+    void main() {
+      vec2 uv = vUv;
+      float t = floor(uTime * 24.0);            // glitch "frame rate"
+      float bands = mix(14.0, 40.0, hash(vec2(t, 1.0)));
+      float row = floor(uv.y * bands);
+      float on = step(0.78, hash(vec2(row, t))) * step(0.001, uAmount);
+
+      // horizontal slice displacement
+      uv.x += (hash(vec2(row, t + 7.0)) - 0.5) * 0.12 * uAmount * on;
+
+      // chromatic aberration: faint always, stronger during a glitch
+      float split = 0.0007 + 0.012 * uAmount * (0.4 + on);
+      vec4 c;
+      c.r = texture2D(tDiffuse, uv + vec2(split, 0.0)).r;
+      c.g = texture2D(tDiffuse, uv).g;
+      c.b = texture2D(tDiffuse, uv - vec2(split, 0.0)).b;
+      c.a = 1.0;
+
+      // fine scanlines + faint light on glitched slices
+      c.rgb *= 1.0 - 0.03 * sin(vUv.y * 900.0);
+      c.rgb += on * uAmount * 0.02;
+
+      gl_FragColor = c;
+    }
+  `,
+};
 
 type Props = {
   /** Path to the GLB, served from /public. */
@@ -58,20 +113,23 @@ type Props = {
    * needs +90° (Math.PI / 2) to face the camera.
    */
   modelYaw?: number;
+  /** Glitch strength 0–1. 0 disables bursts (faint RGB split remains). */
+  glitch?: number;
   className?: string;
 };
 
 export default function HeadStatueBackground({
   modelUrl = "/models/head.glb",
   dracoPath = "https://www.gstatic.com/draco/versioned/decoders/1.5.7/",
-  intensity = 5,
+  intensity = 1,
   rotationRange = Math.PI * 1.2,
   startAngle = -0.5,
-  modelHeight = 4,
+  modelHeight = 3.4,
   offsetX = 0,
-  offsetY = -0.85,
+  offsetY = -0.55,
   cameraDistance = 4.4,
   modelYaw = Math.PI / 2,
+  glitch = 0.6,
   className = "",
 }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -84,7 +142,7 @@ export default function HeadStatueBackground({
     damping: 22,
     mass: 1.2,
   });
-  const scale = useTransform(smooth, [0, 1], [1, 1.52]);
+  const scale = useTransform(smooth, [0, 1], [1, 1.12]);
   const y = useTransform(smooth, [0, 1], ["0%", "-5%"]);
 
   useEffect(() => {
@@ -120,8 +178,8 @@ export default function HeadStatueBackground({
     /* statue: pivot (scroll rotation) > fit (scale + facing) > model */
     const marble = new THREE.MeshStandardMaterial({
       color: 0x000000,
-      roughness: 0.85,
-      metalness: 0,
+      roughness: 0.88,
+      metalness: 0.0,
     });
 
     const statue = new THREE.Group(); // receives scroll rotation + offsets
@@ -181,20 +239,39 @@ export default function HeadStatueBackground({
 
     /* lights: deliberately dim so the statue is only just perceptible */
     const AMBIENT_I = 0.2;
-    const KEY_I = 1; // primary: white, from the left
-    const HIGHLIGHT_I = 1; // highlight: very subtle, from the right
-    const ambient = new THREE.AmbientLight(0xffffff, AMBIENT_I * intensity);
+    const KEY_I = 5; // primary: white, from the left
+    const HIGHLIGHT_I = 4; // highlight: very subtle, from the right
+    const ambient = new THREE.AmbientLight(0x14151a, AMBIENT_I * intensity);
     const key = new THREE.DirectionalLight(0xffffff, KEY_I * intensity);
     key.position.set(-4, 1.5, -4);
-    const rim = new THREE.DirectionalLight(0xbe123c, HIGHLIGHT_I * intensity);
+    const rim = new THREE.DirectionalLight(0xe11d48, HIGHLIGHT_I * intensity);
     rim.position.set(4, 0.8, 0);
     scene.add(ambient, key, rim);
+
+    /* post-processing: render → glitch → tone-map/output */
+    const composer = new EffectComposer(
+      renderer,
+      new THREE.WebGLRenderTarget(1, 1, {
+        type: THREE.HalfFloatType,
+        samples: 4, // keep antialiasing
+      }),
+    );
+    composer.addPass(new RenderPass(scene, camera));
+    const glitchPass = new ShaderPass(GlitchShader);
+    composer.addPass(glitchPass);
+    composer.addPass(new OutputPass()); // applies renderer tone mapping + sRGB
+
+    // glitch burst scheduler
+    let nextBurst = 2 + Math.random() * 4;
+    let burstEnd = 0;
 
     /* sizing */
     const resize = () => {
       const w = mount.clientWidth || window.innerWidth;
       const h = mount.clientHeight || window.innerHeight;
       renderer.setSize(w, h, false);
+      composer.setPixelRatio(renderer.getPixelRatio());
+      composer.setSize(w, h);
       renderer.domElement.style.width = "100%";
       renderer.domElement.style.height = "100%";
       camera.aspect = w / h;
@@ -238,7 +315,19 @@ export default function HeadStatueBackground({
         statue.rotation.x = Math.sin(t * 0.11) * 0.015;
       }
 
-      renderer.render(scene, camera);
+      // Glitch: short random bursts + a kick when scrolling fast
+      if (t > nextBurst) {
+        burstEnd = t + 0.1 + Math.random() * 0.25;
+        nextBurst = burstEnd + 2 + Math.random() * 5;
+      }
+      const burst = t < burstEnd ? 0.6 + Math.random() * 0.4 : 0;
+      const scrollKick = Math.min(1, Math.abs(smooth.getVelocity()) * 4);
+      glitchPass.uniforms.uAmount.value = reduceMotion
+        ? 0
+        : Math.min(1, burst + scrollKick * 0.5) * glitch;
+      glitchPass.uniforms.uTime.value = t;
+
+      composer.render();
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -254,6 +343,7 @@ export default function HeadStatueBackground({
       });
       marble.dispose();
       draco.dispose();
+      composer.dispose();
       renderer.dispose();
       if (renderer.domElement.parentNode === mount) {
         mount.removeChild(renderer.domElement);
@@ -270,6 +360,7 @@ export default function HeadStatueBackground({
     offsetY,
     cameraDistance,
     modelYaw,
+    glitch,
     reduceMotion,
     smooth,
   ]);
